@@ -1,0 +1,109 @@
+---
+title: "BBC Visual and Data Journalism for R graphics"
+output:
+  revealjs::revealjs_presentation:
+    highlight: pygments
+    reveal_options:
+      slideNumber: true
+      previewLinks: true
+---
+
+# How to create BBC style visualizations
+
+## Installing `bbplot`
+
+```{r eval=FALSE}
+#install.pacakges("devtools")
+devtools::install_github('bbc/bbplot')
+```
+
+## Make a ggplot before `bbc_style()`
+
+```{r}
+library(gapminder)
+library(ggplot2)
+
+countries <- c("Taiwan", "China", "Japan", "Singapore")
+line_df <- gapminder[gapminder$country %in% countries, ]
+
+#Make plot
+line <- ggplot(line_df, aes(x = year, y = gdpPercap, colour = country)) +
+  geom_line() +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  labs(title="Earning more",
+       subtitle = "GDP Per Capita 1952-2007")
+```
+
+---
+
+```{r}
+line
+```
+
+## Make ggplot `bbc_style()`
+
+```{r}
+library(bbplot)
+
+line <- line + bbc_style()
+```
+
+---
+
+```{r}
+line
+```
+
+## Getting data from Web API
+
+```{r}
+library(jsonlite)
+
+mayors <- fromJSON("http://ec2-13-115-133-137.ap-northeast-1.compute.amazonaws.com/mayors/all")
+```
+
+## Make a ggplot before `bbc_style()`
+
+```{r message=FALSE}
+library(dplyr)
+
+bar <- mayors %>% 
+  filter(admin_area == "台北市") %>% 
+  group_by(number, candidate) %>% 
+  summarise(ttl_votes = sum(votes)) %>% 
+  ggplot(aes(x = candidate, y = ttl_votes)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = ttl_votes, y= ttl_votes),  vjust = 0.2) +
+  scale_y_continuous(labels = scales::number) +
+  coord_flip() +
+  labs(title="柯文哲當選台北市長",
+       subtitle = "2018 台北市長得票數") +
+  theme(text = element_text(family = "Heiti TC Light"))
+```
+
+---
+
+```{r}
+bar
+```
+
+## Make ggplot `bbc_style()` again!
+
+```{r}
+bar <- bar + 
+  bbc_style() + 
+  theme(text = element_text(family = "Heiti TC Light"))
+```
+
+---
+
+```{r}
+bar
+```
+
+## Use `ggsave()` for illustrator
+
+```{r warning=FALSE, message=FALSE}
+ggsave(line, filename = "~/Desktop/line.pdf", useDingbats = FALSE)
+ggsave(bar, filename = "~/Desktop/bar.pdf", useDingbats = FALSE)
+```
